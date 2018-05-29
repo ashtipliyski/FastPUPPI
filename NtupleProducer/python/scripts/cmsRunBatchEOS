@@ -18,12 +18,12 @@ cp -s $HOMEDIR/* .
 cmsRun $* >> $LOG 2>&1
 for f in *.root; do
     if test -f $f; then
-        xrdcp -f $f root://eoscms/$EOSDIR/$f      2>&1 | tee -a $LOG
+        xrdcp -f $f root://eosusr/$EOSDIR/$f      2>&1 | tee -a $LOG
         if $eos ls $EOSDIR/$f; then
             echo "Successfully copied to $EOSDIR" 2>&1 | tee -a $LOG
         else
             echo "Making a second attempt"        2>&1 | tee -a $LOG
-            xrdcp -f $f root://eoscms/$EOSDIR/$f  2>&1 | tee -a $LOG  
+            xrdcp -f $f root://eosusr/$EOSDIR/$f  2>&1 | tee -a $LOG  
         fi
     else
         echo "File $f does not exist!"	
