@@ -1,5 +1,7 @@
 import FWCore.ParameterSet.Config as cms
+import FWCore.Utilities.FileUtils as FileUtils
 from Configuration.StandardSequences.Eras import eras
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("IN", eras.phase2_trigger)
 process.load('Configuration.StandardSequences.Services_cff')
@@ -17,11 +19,25 @@ process.load('L1Trigger.TrackFindingTracklet.L1TrackletTracks_cff')
 process.load('L1Trigger.L1TTrackMatch.L1TkObjectProducers_cff')
 process.load("L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff")
 
+options = VarParsing.VarParsing ('analysis')
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+options.register('skip',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No events to skip.")
+options.register('job',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No job.")
+
+options.parseArguments()
+
+list = FileUtils.loadListFromFile("937relval-nugun-pu200.txt")
+readFiles = cms.untracked.vstring(*list)
+
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:/eos/cms/store/relval/CMSSW_9_3_7/RelValSingleTauFlatPt2To100_pythia8/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v2/10000/58739462-8B2C-E811-A013-0CC47A7C34D0.root'),
     #fileNames = cms.untracked.vstring('file:/eos/cms/store/relval/CMSSW_9_3_7/RelValZMM_14/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v1/10000/96D02123-012D-E811-868C-0CC47A4D7640.root'),
-    fileNames = cms.untracked.vstring('/store/relval/CMSSW_9_3_7/RelValTTbar_14TeV/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v2/10000/7EC7DD7F-782C-E811-B469-0CC47A4D76A0.root'),
+    #fileNames = cms.untracked.vstring('/store/mc/PhaseIISpring17D/TT_TuneCUETP8M2T4_14TeV-powheg-pythia8/GEN-SIM-DIGI-RAW/NoPU_90X_upgrade2023_realistic_v9-v1/120000/14DA8D2E-ED42-E711-8325-0CC47A546E5E.root'), # ttbar
+    #fileNames = cms.untracked.vstring('/store/relval/CMSSW_9_3_7/RelValTTbar_14TeV/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v2/10000/CE1930F1-762C-E811-B9F4-0CC47A78A468.root'), # ttbar
+    fileNames = readFiles,
+    #fileNames = cms.untracked.vstring('/store/relval/CMSSW_9_3_7/RelValNuGun/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v2/10000/00E7C119-7C2C-E811-B9A9-0CC47A78A42E.root'), # neutrino gun
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
+    skipEvents = cms.untracked.uint32(options.skip),
     inputCommands = cms.untracked.vstring("keep *", 
         "drop l1tEMTFHit2016Extras_simEmtfDigis_CSC_HLT",
         "drop l1tEMTFHit2016Extras_simEmtfDigis_RPC_HLT",
@@ -30,8 +46,10 @@ process.source = cms.Source("PoolSource",
         "drop l1tEMTFTrack2016s_simEmtfDigis__HLT")
 
 )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500))
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents))
+
   
 process.load("L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff")
 
@@ -43,7 +61,7 @@ process.p = cms.Path(
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
-        fileName = cms.untracked.string("inputs.root"),
+        fileName = cms.untracked.string("/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/nugun-pu200-937relval-inputs-%s.root" % (options.job)),
         outputCommands = cms.untracked.vstring("drop *",
             # --- GEN
             "keep *_genParticles_*_*",
@@ -85,5 +103,4 @@ process.out = cms.OutputModule("PoolOutputModule",
         eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
 )
 process.e = cms.EndPath(process.out)
-
 process.schedule = cms.Schedule([process.p,process.e])

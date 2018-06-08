@@ -1,3 +1,4 @@
+import FWCore.Utilities.FileUtils as FileUtils
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
 
@@ -10,9 +11,16 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
+list = FileUtils.loadListFromFile("nugun-pu200-937relval-inputs-list.txt")
+readFiles = cms.untracked.vstring(*list)
+
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:test.root'),
-    fileNames = cms.untracked.vstring('file:/eos/cms/store/cmst3/user/gpetrucc/l1phase2/101X/NewInputs/040418/SingleTauFlat_PU0/inputs_SingleTauFlat_PU0_job1.root'),
+    #fileNames = cms.untracked.vstring('file:ttbar-pu0-937relval-inputs.root'),
+    #fileNames = cms.untracked.vstring('file:ttbar-pu200-937relval-inputs.root'),
+    #fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/ttbar-pu200-937relval-inputs-67.root'),
+   # fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/ttbar-pu200-937relval-inputs-67.root'),
+    fileNames = readFiles,
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck")
 )
 
@@ -74,7 +82,7 @@ for X in "tot","max":
         #process.ntuple.copyUInts.append( "InfoOut:%sNL1Puppi%s" % (X,O))
 
 process.p = cms.Path(process.runPF + process.caloStage2 + process.ntuple)
-process.TFileService = cms.Service("TFileService", fileName = cms.string("respTupleNew.root"))
+process.TFileService = cms.Service("TFileService", fileName = cms.string("nugun-respTupleNew.root"))
 
 # Below for more debugging
 if True:
