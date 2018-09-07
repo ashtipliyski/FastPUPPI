@@ -1,4 +1,7 @@
+# Usage: cmsRun runNewInputs.py maxEvents=10 job=1 outFile=<outFile>-<job-number>
+
 import FWCore.ParameterSet.Config as cms
+
 import FWCore.Utilities.FileUtils as FileUtils
 from Configuration.StandardSequences.Eras import eras
 import FWCore.ParameterSet.VarParsing as VarParsing
@@ -19,15 +22,42 @@ process.load('L1Trigger.TrackFindingTracklet.L1TrackletTracks_cff')
 process.load('L1Trigger.L1TTrackMatch.L1TkObjectProducers_cff')
 process.load("L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff")
 
+process.load('L1Trigger.VertexFinder.VertexProducer_cff')
+process.load('L1Trigger.VertexFinder.VertexAnalyzer_cff')
+process.VertexProducer.l1TracksInputTag = process.pfTracksFromL1Tracks.L1TrackTag
+process.L1TVertexAnalyzer.l1TracksInputTag = process.pfTracksFromL1Tracks.L1TrackTag
+
+
 options = VarParsing.VarParsing ('analysis')
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+options.register('winSize',0.33,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.float,"Size of matching window used for vertexing in cm.")
 options.register('skip',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No events to skip.")
 options.register('job',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No job.")
+options.register('outFile', 'ttbar-pu200-937relval-inputs',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Output filename prefix.")
+options.register('outdir', '/eos/user/a/ashtipli/work/pf/ttbar-vf-integration-0p33-vf-assign',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Output directory.")
+options.register('inputFile','',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Input filename.")
 
 options.parseArguments()
 
-list = FileUtils.loadListFromFile("937relval-nugun-pu200.txt")
-readFiles = cms.untracked.vstring(*list)
+# matching_window = cms.double(15.05)
+matching_window = options.winSize
+
+process.l1pfProducer.vtxRes = matching_window
+process.l1pfProducer.AdaptiveCut = cms.bool(True) # whether to treat endcap tracks differently
+
+process.VertexProducer.VertexReconstruction.TP_VertexWidth = matching_window
+process.L1TVertexAnalyzer.VertexReconstruction.TP_VertexWidth = matching_window
+process.VertexProducer.VertexReconstruction.VertexResolution = matching_window
+process.L1TVertexAnalyzer.VertexReconstruction.VertexResolution = matching_window
+
+# list = FileUtils.loadListFromFile("937relval-nugun-pu200.txt")
+# list = FileUtils.loadListFromFile("937relval-ttbar-pu200.txt")
+
+if (options.inputFile == ''):
+    list = FileUtils.loadListFromFile(options.inputFiles)
+    readFiles = cms.untracked.vstring(*list)
+else:
+    readFiles = cms.untracked.vstring(options.inputFile)
 
 process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:/eos/cms/store/relval/CMSSW_9_3_7/RelValSingleTauFlatPt2To100_pythia8/GEN-SIM-DIGI-RAW/93X_upgrade2023_realistic_v5_2023D17noPU-v2/10000/58739462-8B2C-E811-A013-0CC47A7C34D0.root'),
@@ -50,18 +80,27 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 # process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents))
 
-  
+
 process.load("L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff")
 
 
 process.p = cms.Path(
     process.L1TrackletTracks + process.SimL1Emulator +
+    process.VertexProducer +
+    process.L1TVertexAnalyzer +
     process.L1TkElectrons + process.L1TkPhotons + process.L1TkJets + process.L1TkPrimaryVertex + process.L1TkEtMiss + process.L1TkHTMissVtx +  process.L1TkIsoElectrons + process.L1TkTauFromCalo + process.L1TkMuons +
     process.l1ParticleFlow
 )
 
+process.TFileService = cms.Service("TFileService", 
+#                                   fileName = cms.string("/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/ttbar-vf-integration-1p05/histos/histos-%s.root" % (options.job)),
+                                   fileName = cms.string("%s/histos/histos-%s.root" % (options.outdir, options.job)),
+#                                   closeFileFast = cms.untracked.bool(True)
+                                   )
+
 process.out = cms.OutputModule("PoolOutputModule",
-        fileName = cms.untracked.string("/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/nugun-pu200-937relval-inputs-%s.root" % (options.job)),
+        fileName = cms.untracked.string("%s/%s-%03i.root" % (options.outdir, options.outFile, options.job)),
+#        fileName = cms.untracked.string("%s-%s.root" % (options.outFile, options.job)),
         outputCommands = cms.untracked.vstring("drop *",
             # --- GEN
             "keep *_genParticles_*_*",
@@ -75,6 +114,9 @@ process.out = cms.OutputModule("PoolOutputModule",
             "keep *_hgcalTriggerPrimitiveDigiProducer_calibratedTriggerCells_*",
             "keep *_simGmtStage2Digis__*",
             "keep *_simHcalTriggerPrimitiveDigis__*",
+            # --- vertexing
+            'keep *_VertexProducer_l1vertices_*',
+            'keep *_VertexProducer_l1vertextdr_*',
             # --- to be tested
             "keep *_hgcalTriggerPrimitiveDigiProducer_tower_*",
             "keep *_hgcalTriggerPrimitiveDigiProducer_towerMap_*",
@@ -104,3 +146,4 @@ process.out = cms.OutputModule("PoolOutputModule",
 )
 process.e = cms.EndPath(process.out)
 process.schedule = cms.Schedule([process.p,process.e])
+# zele_numEvent10.root-1.root

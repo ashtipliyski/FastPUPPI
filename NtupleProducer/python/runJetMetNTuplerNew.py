@@ -7,9 +7,14 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(8900))
 
-list = FileUtils.loadListFromFile("nugun-pu200-937relval-inputs-list.txt")
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
+
+# list = FileUtils.loadListFromFile("nugun-pu200-937relval-inputs-list.txt")
+list = FileUtils.loadListFromFile("zmumu-vf-integration-0p33-vf-assign-inputs.txt")
+# ttbar-vf-integration-0p33-inputs-vf-association.txt
+# nugun-vf-integration-0p33-vf-assign-inputs.txt
 readFiles = cms.untracked.vstring(*list)
 
 process.source = cms.Source("PoolSource",
@@ -29,6 +34,7 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '100X_upgrade2023_realistic_v1', '')
 
 process.load("L1Trigger.Phase2L1ParticleFlow.l1ParticleFlow_cff")
+process.l1pfProducer.vtxRes = 0.33
 process.l1ParticleFlow.remove(process.l1EGammaCrystalsProducer)
 process.l1pfProducerTightTK = process.l1pfProducer.clone(trkMinStubs = 6)
 
@@ -77,10 +83,16 @@ JEC_PU200 = {
 #                        offset  = cms.vdouble(-9.732, -9.899, -9.346, -6.035, -5.909, -6.938, -1.924, -0.642, -1.957, -10.030),
 #                        scale   = cms.vdouble( 0.981,  0.994,  0.960,  0.997,  0.980,  0.948,  0.860,  0.918,  1.000,  1.360),
 # ---- PU200 ttbar
+
+			# etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
+			# offset  = cms.vdouble( 5.724,  7.366,  12.345,  34.746,  54.324,  62.151,  58.816,  70.077,  60.158,  62.879),
+			# scale   = cms.vdouble( 1.015,  1.038,  1.006,  1.007,  0.993,  0.998,  0.810,  0.918,  1.232,  1.420),
+
 			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
 			offset  = cms.vdouble( 5.668,  7.281,  12.378,  34.723,  54.488,  62.348,  58.557,  69.762,  60.514,  62.879),
 			scale   = cms.vdouble( 1.016,  1.040,  1.006,  1.009,  0.990,  0.991,  0.816,  0.922,  1.225,  1.420),
-# ---- PU200 NuGun
+
+# ---- pu200 NuGun
 #			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
 #			offset  = cms.vdouble( 0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000),
 #			scale   = cms.vdouble( 1.000,  1.000,  1.000,  1.000,  1.000,  1.000,  1.000,  1.000,  1.000,  1.000),
@@ -118,9 +130,15 @@ JEC_PU200 = {
 #                        offset  = cms.vdouble(-2.708, -2.958, -3.183, -3.743, -4.094,  3.540,  0.000,  0.000,  0.000,  0.000),
 #                        scale   = cms.vdouble( 0.539,  0.539,  0.527,  0.541,  0.527,  0.014,  1.000,  1.000,  1.000,  1.000),
 # ---- PU200 ttbar
+
+# ------------------------ guys below are for the tight (default) matching window
+#			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
+#			offset  = cms.vdouble(-2.610, -2.764, -2.358, -3.008, -3.224,  3.623,  0.000,  0.000,  0.000,  0.000),
+#			scale   = cms.vdouble( 0.547,  0.542,  0.522,  0.543,  0.520,  0.006,  1.000,  1.000,  1.000,  1.000),
+# -------------------------------------------------------------------------------
 			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
-			offset  = cms.vdouble(-2.610, -2.764, -2.358, -3.008, -3.224,  3.623,  0.000,  0.000,  0.000,  0.000),
-			scale   = cms.vdouble( 0.547,  0.542,  0.522,  0.543,  0.520,  0.006,  1.000,  1.000,  1.000,  1.000),
+			offset  = cms.vdouble(-2.613, -2.745, -2.464, -2.963, -3.066,  3.607,  0.000,  0.000,  0.000,  0.000),
+			scale   = cms.vdouble( 0.547,  0.542,  0.523,  0.540,  0.515,  0.007,  1.000,  1.000,  1.000,  1.000),
 # ---- PU200 NuGun
 #			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
 #			offset  = cms.vdouble( 0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000),
@@ -158,8 +176,13 @@ JEC_PU200 = {
 #                        scale   = cms.vdouble( 0.790,  0.795,  0.765,  0.765,  0.746,  0.092,  0.266,  0.329,  0.138,  0.485),
 # ---- PU200 ttbar
 			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
-			offset  = cms.vdouble(-12.077, -12.337, -11.871, -10.543, -5.511,  4.483,  3.766,  1.547, -7.040, -17.857),
-			scale   = cms.vdouble( 1.128,  1.153,  1.125,  1.191,  1.290,  0.912,  1.007,  1.305,  1.652,  1.402),
+			offset  = cms.vdouble(-12.626, -13.217, -12.414, -11.148, -5.306,  4.783,  3.766,  1.547, -7.040, -17.857),
+			scale   = cms.vdouble( 1.120,  1.146,  1.109,  1.191,  1.270,  0.904,  1.007,  1.305,  1.652,  1.402),
+# ------------------------- guys below are for the tight (default) matching window
+#			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
+#			offset  = cms.vdouble(-12.077, -12.337, -11.871, -10.543, -5.511,  4.483,  3.766,  1.547, -7.040, -17.857),
+#			scale   = cms.vdouble( 1.128,  1.153,  1.125,  1.191,  1.290,  0.912,  1.007,  1.305,  1.652,  1.402),
+# --------------------------------------------------------------------------------
 # ---- PU200 NuGun
 #			etaBins = cms.vdouble( 0.500,  1.000,  1.500,  2.000,  2.500,  3.000,  3.500,  4.000,  4.500,  5.000),
 #			offset  = cms.vdouble( 0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000,  0.000),
@@ -252,5 +275,5 @@ process.p = cms.Path(
         process.l1ParticleFlow + process.l1pfProducerTightTK +
         process.mets + process.jets +
         process.ntuple)
-process.TFileService = cms.Service("TFileService", fileName = cms.string("nugun-jetmetTuple-pu200.root"))
+process.TFileService = cms.Service("TFileService", fileName = cms.string("jetmetTuple-pu200-zmumu-vf-integration-0p33-vf-assign.root"))
 #process.TFileService = cms.Service("TFileService", fileName = cms.string("neutGunTuple.root"))

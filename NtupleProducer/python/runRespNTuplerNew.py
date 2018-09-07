@@ -1,17 +1,39 @@
 import FWCore.Utilities.FileUtils as FileUtils
 import FWCore.ParameterSet.Config as cms
 from Configuration.StandardSequences.Eras import eras
+import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process("RESP", eras.phase2_trigger)
 
 process.load('Configuration.StandardSequences.Services_cff')
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
-process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-list = FileUtils.loadListFromFile("nugun-pu200-937relval-inputs-list.txt")
+options = VarParsing.VarParsing ('analysis')
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
+
+# register output file basename and input file list as runtime options
+options.register('outFile', 'ttbar-pu200-937relval-response-ntuples',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Output filename prefix.")
+options.register('outdir', '/eos/user/a/ashtipli/work/pf',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Output filename prefix.")
+options.register('inputFile','ttbar-vf-integration-0p33-inputs.txt',VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.string,"Input filename.")
+
+# register control of job number and number of events to skip via runtime options
+options.register('skip',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No events to skip.")
+options.register('job',0,VarParsing.VarParsing.multiplicity.singleton,VarParsing.VarParsing.varType.int,"No job.")
+
+options.parseArguments()
+
+# process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1))
+# enable control of max events from a CLI option
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(options.maxEvents))
+
+process.MessageLogger.cerr.FwkReport.reportEvery = 10 # instead of 1000, split into 100 event jobs
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000 # instead of 1000, split into 100 event jobs
+
+# list = FileUtils.loadListFromFile("nugun-pu200-937relval-inputs-list.txt")
+# control input file through runtime option
+list = FileUtils.loadListFromFile(options.inputFile)
+list = FileUtils.loadListFromFile("ttbar-vf-integration-0p33-inputs.txt")
 readFiles = cms.untracked.vstring(*list)
 
 process.source = cms.Source("PoolSource",
@@ -21,6 +43,7 @@ process.source = cms.Source("PoolSource",
     #fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/ttbar-pu200-937relval-inputs-67.root'),
    # fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/a/ashtipli/code/phase-ii/fastpuppi/CMSSW_10_1_0_pre3/src/FastPUPPI/NtupleProducer/python/res/ttbar-pu200-937relval-inputs-67.root'),
     fileNames = readFiles,
+    skipEvents = cms.untracked.uint32(options.skip),
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck")
 )
 
@@ -82,7 +105,7 @@ for X in "tot","max":
         #process.ntuple.copyUInts.append( "InfoOut:%sNL1Puppi%s" % (X,O))
 
 process.p = cms.Path(process.runPF + process.caloStage2 + process.ntuple)
-process.TFileService = cms.Service("TFileService", fileName = cms.string("nugun-respTupleNew.root"))
+process.TFileService = cms.Service("TFileService", fileName = cms.string("%s/%s-%s.root" % (options.outdir, options.outFile, options.job)))
 
 # Below for more debugging
 if True:

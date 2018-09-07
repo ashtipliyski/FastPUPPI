@@ -24,6 +24,7 @@ def makeCumulativeHTEff(name, tree, expr, cut="", norm=40E3):
     return ret
 
 def makeEffHist(name, tree, expr, thr, gvar, cut=""):
+    # print("generating efficiency histogram")
     tree.Draw("(%s > %s):%s>>htemp(16,0,800,2,-0.5,1.5)" % (expr,thr,gvar), cut);
     htemp = ROOT.gROOT.FindObject("htemp")
     num, den = [ ROOT.TH1F(name+"_"+x,"",16,0,800) for x in ("pass","tot") ]
@@ -40,7 +41,9 @@ whats = [
         #("Raw Calo",   "RawCalo$", ROOT.kViolet-4,  21, 1.7),
         ("Calo",       "AK4CaloJets$",    ROOT.kViolet+2, 20, 1.5),
         ("TK",         "AK4TKJets$",      ROOT.kRed+0, 21, 1.5),
+        ("TK (tight)", "AK4TightTKJets$",  ROOT.kAzure+10, 20, 1.2),
         ("TK #Deltaz", "AK4TKVJets$",     ROOT.kRed+1, 24, 1.5),
+        ("TK #Deltaz (tight)", "AK4TightTKVJets$",  ROOT.kAzure+2, 20, 1.2),
         ("PF",         "AK4PFJets$",      ROOT.kOrange+7, 24, 1.5),
         ("Puppi",      "AK4PuppiJets$",   ROOT.kBlue+1, 21, 1.5),
     ]),
@@ -50,7 +53,7 @@ whats = [
         #("TK",         "AK4TKJets$",      ROOT.kAzure+10, 20, 1.2),
         #("TK (tight)", "AK4TightTKJets$",  ROOT.kAzure+10, 20, 1.2),
         ("TK #Deltaz", "AK4TightTKVJets$",  ROOT.kAzure+2, 20, 1.2),
-        #("PF",         "AK4PFJets$",      ROOT.kOrange+7, 20, 1.2),
+        ("PF",         "AK4PFJets$",      ROOT.kOrange+7, 20, 1.2),
         ("PF+Puppi",      "AK4PuppiJets$",   ROOT.kRed+1, 20, 1.2),
         ]),
     ('comptp',[
@@ -86,7 +89,7 @@ sels = []; fname = args[0] # "respTupleNew_D4T_NoPU.root"
 
 odir = args[2] # "plots/910pre2/test"
 os.system("mkdir -p "+odir)
-os.system("cp %s/php/index.php %s/" % (os.environ['HOME'], odir));
+#os.system("cp %s/php/index.php %s/" % (os.environ['HOME'], odir));
 ROOT.gROOT.ProcessLine(".x %s/cpp/tdrstyle.cc" % os.environ['HOME']);
 ROOT.gStyle.SetOptStat(0)
 c1 = ROOT.TCanvas("c1","c1")
@@ -107,6 +110,7 @@ for kind,things in whats:
             cut = 9999
             for ix in xrange(1,rateplot.GetNbinsX()+1):
                 if rateplot.GetBinContent(ix) <= options.rate:
+                    # this find the cut that needs to be applied to obtain the desired rate for the sample being looked at the moment
                     cut = rateplot.GetXaxis().GetBinLowEdge(ix)
                     break
             plot = makeEffHist(name, signal, rexpr, cut, "AK4GenJetsE%sPt%d_ht_raw" % (options.eta, options.pt))
@@ -140,7 +144,9 @@ for kind,things in whats:
         for y in 40e3, 100, 10:
             line.DrawLine(frame.GetXaxis().GetXmin(),y,frame.GetXaxis().GetXmax(),y)
     for n,p in plots: 
-        p.Draw("PCX SAME" if ("TH1" not in p.ClassName()) else "C SAME")
+        p.Draw("ECX SAME" if ("TH1" not in p.ClassName()) else "EC SAME")
+        #if (n == "PF"):
+        #    p.Draw("AP");
     for n,p in plots: 
         leg.AddEntry(p, n, "LP" if args[3] != "rate" else "L")
     leg.Draw()
