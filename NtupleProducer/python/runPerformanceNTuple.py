@@ -8,7 +8,7 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True), allowUnscheduled = cms.untracked.bool(False) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1))
 process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 process.source = cms.Source("PoolSource",
@@ -85,6 +85,44 @@ def monitorPerf(label, tag, makeResp=True, makeRespSplit=True, makeJets=True, ma
             _add('met'+label+'Barrel', pfMet.clone(src = 'barrel'+label, calculateSignificance = False))
             setattr(process.l1pfmetBarrelTable.mets, label, cms.InputTag('met'+label+'Barrel'))
 
+
+class GatherAllModulesVisitor(object):
+    """Visitor that travels within a cms.Sequence, and returns a list of objects of type gatheredInance(e.g. modules) that have it"""
+    def __init__(self, gatheredInstance=cms._Module):
+        self._modules = []
+        self._gatheredInstance= gatheredInstance
+    def enter(self,visitee):
+        if isinstance(visitee,self._gatheredInstance):
+            self._modules.append(visitee)
+    def leave(self,visitee):
+        pass
+    def modules(self):
+        return self._modules
+
+def listModules(sequence):
+    visitor = GatherAllModulesVisitor(gatheredInstance=cms._Module)
+    sequence.visit(visitor)
+    return visitor.modules()
+
+def listSequences(sequence):
+    visitor = GatherAllModulesVisitor(gatheredInstance=cms.Sequence)
+    sequence.visit(visitor)
+    return visitor.modules()
+
+def __labelsInSequence(process, sequenceLabel, postfix="", keepPostFix=False):
+    position = -len(postfix)
+    if keepPostFix: 
+        position = None
+
+    result = [ m.label()[:position] for m in listModules( getattr(process,sequenceLabel+postfix))]
+    result.extend([ m.label()[:position] for m in listSequences( getattr(process,sequenceLabel+postfix))]  )
+    if postfix == "":
+        result = [ m.label() for m in listModules( getattr(process,sequenceLabel+postfix))]
+        result.extend([ m.label() for m in listSequences( getattr(process,sequenceLabel+postfix))]  )
+    return result
+
+
+
 process.ntuple = cms.EDAnalyzer("ResponseNTuplizer",
     genJets = cms.InputTag("ak4GenJetsNoNu"),
     genParticles = cms.InputTag("genParticles"),
@@ -119,6 +157,117 @@ process.l1pfmetTable = cms.EDProducer("L1PFMetTableProducer",
     mets = cms.PSet(
     ),
 )
+
+process.l1ParticleFlow1 = cms.Sequence()
+for l_ in  __labelsInSequence(process,"l1ParticleFlow"):
+    if (not hasattr(getattr(process,l_),"_seq")):
+        newl = getattr(process,l_).clone()
+        setattr(process,l_+"1",newl)
+        process.l1ParticleFlow1 += getattr(process,l_+"1")
+
+process.l1ParticleFlow1.replace("l1pfProducerBarrel","l1pfProducerBarrel1")
+process.l1ParticleFlow1.replace("l1pfProducerHGCal","l1pfProducerHGCal1")
+process.l1ParticleFlow1.replace("l1pfProducerHF","l1pfProducerHF1")
+process.l1pfProducerBarrel1.vtxNum = cms.untracked.uint32(1)
+process.l1pfProducerHGCal1.vtxNum = cms.untracked.uint32(1)
+process.l1pfProducerHF1.vtxNum = cms.untracked.uint32(1)
+process.l1pfCandidates1.pfProducers = cms.VInputTag(
+        cms.InputTag("l1pfProducerBarrel1"),
+        cms.InputTag("l1pfProducerHGCal1"),
+        cms.InputTag("l1pfProducerHF1")
+    )
+process.l1ParticleFlow1 = cms.Sequence()
+for l_ in  __labelsInSequence(process,"l1ParticleFlow"):
+    if (not hasattr(getattr(process,l_),"_seq")):
+        newl = getattr(process,l_).clone()
+        setattr(process,l_+"1",newl)
+        process.l1ParticleFlow1 += getattr(process,l_+"1")
+
+process.l1ParticleFlow1.replace("l1pfProducerBarrel","l1pfProducerBarrel1")
+process.l1ParticleFlow1.replace("l1pfProducerHGCal","l1pfProducerHGCal1")
+process.l1ParticleFlow1.replace("l1pfProducerHF","l1pfProducerHF1")
+process.l1pfProducerBarrel1.vtxNum = cms.untracked.uint32(1)
+process.l1pfProducerHGCal1.vtxNum = cms.untracked.uint32(1)
+process.l1pfProducerHF1.vtxNum = cms.untracked.uint32(1)
+process.l1pfCandidates1.pfProducers = cms.VInputTag(
+        cms.InputTag("l1pfProducerBarrel1"),
+        cms.InputTag("l1pfProducerHGCal1"),
+        cms.InputTag("l1pfProducerHF1")
+    )
+
+
+process.l1ParticleFlow2 = cms.Sequence()
+for l_ in  __labelsInSequence(process,"l1ParticleFlow"):
+    if (not hasattr(getattr(process,l_),"_seq")):
+        newl = getattr(process,l_).clone()
+        setattr(process,l_+"2",newl)
+        process.l1ParticleFlow2 += getattr(process,l_+"2")
+
+process.l1ParticleFlow2.replace("l1pfProducerBarrel","l1pfProducerBarrel2")
+process.l1ParticleFlow2.replace("l1pfProducerHGCal","l1pfProducerHGCal2")
+process.l1ParticleFlow2.replace("l1pfProducerHF","l1pfProducerHF2")
+process.l1pfProducerBarrel2.vtxNum = cms.untracked.uint32(2)
+process.l1pfProducerHGCal2.vtxNum = cms.untracked.uint32(2)
+process.l1pfProducerHF2.vtxNum = cms.untracked.uint32(2)
+process.l1pfCandidates2.pfProducers = cms.VInputTag(
+        cms.InputTag("l1pfProducerBarrel2"),
+        cms.InputTag("l1pfProducerHGCal2"),
+        cms.InputTag("l1pfProducerHF2")
+    )
+
+
+process.l1ParticleFlow3 = cms.Sequence()
+for l_ in  __labelsInSequence(process,"l1ParticleFlow"):
+    if (not hasattr(getattr(process,l_),"_seq")):
+        newl = getattr(process,l_).clone()
+        setattr(process,l_+"3",newl)
+        process.l1ParticleFlow3 += getattr(process,l_+"3")
+
+process.l1ParticleFlow3.replace("l1pfProducerBarrel","l1pfProducerBarrel3")
+process.l1ParticleFlow3.replace("l1pfProducerHGCal","l1pfProducerHGCal3")
+process.l1ParticleFlow3.replace("l1pfProducerHF","l1pfProducerHF3")
+process.l1pfProducerBarrel3.vtxNum = cms.untracked.uint32(3)
+process.l1pfProducerHGCal3.vtxNum = cms.untracked.uint32(3)
+process.l1pfProducerHF3.vtxNum = cms.untracked.uint32(3)
+process.l1pfCandidates3.pfProducers = cms.VInputTag(
+        cms.InputTag("l1pfProducerBarrel3"),
+        cms.InputTag("l1pfProducerHGCal3"),
+        cms.InputTag("l1pfProducerHF3")
+    )
+
+process.l1ParticleFlow4 = cms.Sequence()
+for l_ in  __labelsInSequence(process,"l1ParticleFlow"):
+    if (not hasattr(getattr(process,l_),"_seq")):
+        newl = getattr(process,l_).clone()
+        setattr(process,l_+"4",newl)
+        process.l1ParticleFlow4 += getattr(process,l_+"4")
+
+process.l1ParticleFlow4.replace("l1pfProducerBarrel","l1pfProducerBarrel4")
+process.l1ParticleFlow4.replace("l1pfProducerHGCal","l1pfProducerHGCal4")
+process.l1ParticleFlow4.replace("l1pfProducerHF","l1pfProducerHF4")
+process.l1pfProducerBarrel4.vtxNum = cms.untracked.uint32(4)
+process.l1pfProducerHGCal4.vtxNum = cms.untracked.uint32(4)
+process.l1pfProducerHF4.vtxNum = cms.untracked.uint32(4)
+process.l1pfCandidates4.pfProducers = cms.VInputTag(
+        cms.InputTag("l1pfProducerBarrel4"),
+        cms.InputTag("l1pfProducerHGCal4"),
+        cms.InputTag("l1pfProducerHF4")
+    )
+
+
+
+process.multweights = cms.EDProducer("L1MultPuppiWeightProducer",
+    pf = cms.InputTag("l1pfCandidates:PF"),
+    pup = cms.InputTag("l1pfCandidates:Puppi"),
+    pup1 = cms.InputTag("l1pfCandidates1:Puppi"),
+    pup2 = cms.InputTag("l1pfCandidates2:Puppi"),
+    pup3 = cms.InputTag("l1pfCandidates3:Puppi"),
+    pup4 = cms.InputTag("l1pfCandidates4:Puppi"),
+    pup5 = cms.InputTag("l1pfCandidates5:Puppi"),
+    top_m = cms.uint32(1)
+)
+
+
 process.l1pfmetCentralTable = process.l1pfmetTable.clone(genMet = "genMetCentralTrue", flavour = "Central")
 process.l1pfmetBarrelTable  = process.l1pfmetTable.clone(genMet = "genMetBarrelTrue", flavour = "Barrel")
 
@@ -131,7 +280,12 @@ monitorPerf("L1Puppi", "l1pfCandidates:Puppi")
 process.runPF.associate(process.extraPFStuff)
 process.p = cms.Path(
         process.runPF + 
-        process.ntuple + 
+        process.ntuple + #
+        process.l1ParticleFlow1 +
+        process.l1ParticleFlow2 +
+        process.l1ParticleFlow3 +
+        process.l1ParticleFlow4 +
+        process.multweights +
         process.l1pfjetTable + 
         process.l1pfmetTable + process.l1pfmetCentralTable + process.l1pfmetBarrelTable
         )
