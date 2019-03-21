@@ -98,17 +98,7 @@ l1t::PFCandidate collapseWeights(l1t::PFCandidate pfCand, std::vector<double> we
   // current implementation picks the max weight and attaches it to candidate
   double weight = 0;
   for (double w : weights) weight = std::max(weight, w);
-  // for (size_t i = 0; i < weights.size(); ++i) weight = std::max(weights[i], weight);
 
-  // l1t::PFCandidate cand(kind, charge, polarlorentzvector, puppiweight, hwpt, hweta, hweta);
-
-  // l1t::PFCandidate cand(/*kind = */,
-  //                       /*charge = */ pfCand.charge(),
-  //                       /*lorentzvector = */,
-  //                       /*puppiweight = */ weight,
-  //                       /*hwpt = */ pfCand.hwPt(),
-  //                       /*hweta = */ pfCand.hwEta(),
-  //                       /*hwphi = */ pfCand.hwPhi());
   l1t::PFCandidate cand(pfCand);
   cand.setPuppiWeight(weight);
 
@@ -137,14 +127,6 @@ L1MultPuppiWeightProducer::produce(edm::StreamID id, edm::Event& iEvent, const e
   edm::Handle<std::vector<l1t::PFCandidate>> pupParticles4;
   iEvent.getByToken(pupToken4_, pupParticles4);
 
-  // std::cout << "pf candidates = " << pfParticles->size() << std::endl;
-  // std::cout << "pu candidates = " << pupParticles->size() << std::endl;
-  // std::cout << "pu1 candidates = " << pupParticles1->size() << std::endl;
-  // std::cout << "pu2 candidates = " << pupParticles2->size() << std::endl;
-  // std::cout << "pu3 candidates = " << pupParticles3->size() << std::endl;
-  // std::cout << "pu4 candidates = " << pupParticles4->size() << std::endl;
-  // std::cout << "--------------- topM = " << top_m_ << " --------------------" << std::endl;
-
   std::vector<l1t::PFCandidate> cands;
 
   for (size_t i = 0; i < pfParticles->size(); ++i)
@@ -157,18 +139,9 @@ L1MultPuppiWeightProducer::produce(edm::StreamID id, edm::Event& iEvent, const e
     weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles3));
     weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles4));
 
-    // std::cout << "cand [" << i << "]: weights = ";
-    // for (size_t j = 0; j < weights.size(); ++j) {
-    //   std::cout << weights[j] << ",";
-    // }
-
     double weight = 0;
     for (const auto & w : weights) weight = std::max(weight, w);
-    // std::cout << " --- max = " << weight;
-    // std::cout << std::endl;
 
-    // std::cout << "[" << i << "] " << "weight = " << getWeight(i, (*pfParticles)[i], *pupParticles)
-    //           << std::endl;
     l1t::PFCandidate cand((*pfParticles)[i]);
     cand.setPuppiWeight(weight);
     cands.emplace_back(cand);
