@@ -275,18 +275,18 @@ monitorPerf("L1Calo", "l1pfCandidates:Calo", makeRespSplit = False)
 monitorPerf("L1TK", "l1pfCandidates:TK", makeRespSplit = False, makeJets=False, makeMET=False)
 monitorPerf("L1TKV", "l1pfCandidates:TKVtx", makeRespSplit = False, makeJets=False, makeMET=False)
 monitorPerf("L1PF", "l1pfCandidates:PF")
-# monitorPerf("L1Puppi", "multweights:MultiPuppi")
-monitorPerf("L1Puppi", "l1pfCandidates:Puppi")
+monitorPerf("L1Puppi", "multweights:MultiPuppi")
+# monitorPerf("L1Puppi", "l1pfCandidates:Puppi")
 
 process.runPF.associate(process.extraPFStuff)
 process.p = cms.Path(
         process.runPF + 
-        process.ntuple + #
         process.l1ParticleFlow1 +
         process.l1ParticleFlow2 +
         process.l1ParticleFlow3 +
         process.l1ParticleFlow4 +
         process.multweights +
+        process.ntuple + #
         process.l1pfjetTable + 
         process.l1pfmetTable + process.l1pfmetCentralTable + process.l1pfmetBarrelTable
         )

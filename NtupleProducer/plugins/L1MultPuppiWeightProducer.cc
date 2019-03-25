@@ -32,6 +32,8 @@ private:
   virtual void produce(edm::StreamID id, edm::Event& iEvent, const edm::EventSetup& iSetup) const override;
 
   float getWeight(int i, l1t::PFCandidate pfCand, std::vector<l1t::PFCandidate> pupCands) const;
+  int getMatch(int i, l1t::PFCandidate pfCand, std::vector<l1t::PFCandidate> pupCands) const;
+
   l1t::PFCandidate collapseWeights(l1t::PFCandidate pfCand, std::vector<double> weights);
 
   // edm::EDGetTokenT<reco::CandidateView> gen_;
@@ -61,6 +63,78 @@ L1MultPuppiWeightProducer::L1MultPuppiWeightProducer(const edm::ParameterSet& iC
 
 L1MultPuppiWeightProducer::~L1MultPuppiWeightProducer() { }
 
+int
+L1MultPuppiWeightProducer::getMatch(int i, l1t::PFCandidate pfCand, std::vector<l1t::PFCandidate> pupCands) const
+{
+  // float weight = 0;
+
+  float pfEta = pfCand.eta();
+  float pfPhi = pfCand.phi();
+  float pupEta = 999;
+  float pupPhi = 999;
+
+  bool found = false;
+
+
+  for (size_t j = 0; j < pupCands.size(); ++j) {
+    l1t::PFCandidate pupCand = (pupCands)[j];
+
+    pupEta = pupCand.eta();
+    pupPhi = pupCand.phi();
+
+    // bool ptCond = (pupCand.pt() / pupCand.puppiWeight()) == pfCand.pt();
+    bool kindCond = pupCand.id() == pfCand.id();
+
+    // int matches = 0;
+
+    found = (pfEta == pupEta and pfPhi == pupPhi and kindCond);
+
+    if (found) {
+
+//       std::cout << "------ pfCand [" << i << "] ---- pupCand [" << j << "] -----" << std::endl;
+
+//       std::cout << "kind:\t"
+//                 << pfCand.id() << "\t" << pupCand.id()
+//                 << std::endl;
+//       std::cout << "chg:\t"
+//                 << pfCand.charge() << "\t" << pupCand.charge()
+//                 << std::endl;
+//       std::cout << "lv:\t"
+// //                << pfCand.id() << " ---- " << pupCand.id()
+//                 << std::endl;
+//       std::cout << "pw:\t"
+//                 << pfCand.puppiWeight() << "\t" << pupCand.puppiWeight()
+//                 << std::endl;
+//       std::cout << "pt:\t"
+//                 << pfCand.pt() << "\t" << pupCand.pt()
+//                 << std::endl;
+//       std::cout << "eta:\t"
+//                 << pfCand.eta() << "\t" << pupCand.eta()
+//                 << std::endl;
+//       std::cout << "phi:\t"
+//                 << pfCand.phi() << "\t" << pupCand.phi()
+//                 << std::endl;
+//       std::cout << "hwpt:\t"
+//                 << pfCand.hwPt() << "\t" << pupCand.hwPt()
+//                 << std::endl;
+//       std::cout << "hweta:\t"
+//                 << pfCand.hwEta() << "\t" << pupCand.hwEta()
+//                 << std::endl;
+//       std::cout << "hwphi:\t"
+//                 << pfCand.hwPhi() << "\t" << pupCand.hwPhi()
+//                 << std::endl;
+
+      return j;
+    }
+  }
+
+  return -1;
+
+  // if (!found) {
+  //   weight = 0;
+  // }
+}
+
 float
 L1MultPuppiWeightProducer::getWeight(int i, l1t::PFCandidate pfCand, std::vector<l1t::PFCandidate> pupCands) const
 {
@@ -75,13 +149,64 @@ L1MultPuppiWeightProducer::getWeight(int i, l1t::PFCandidate pfCand, std::vector
 
 
   for (size_t j = 0; j < pupCands.size(); ++j) {
-    pupEta = (pupCands)[j].eta();
-    pupPhi = (pupCands)[j].phi();
+    l1t::PFCandidate pupCand = (pupCands)[j];
+    pupEta = pupCand.eta();
+    pupPhi = pupCand.phi();
 
-    found = (pfEta == pupEta and pfPhi == pupPhi);
+    // bool ptCond = (pupCand.pt() / pupCand.puppiWeight()) == pfCand.pt();
+    bool kindCond = pupCand.id() == pfCand.id();
+
+    // int matches = 0;
+
+    found = (pfEta == pupEta and pfPhi == pupPhi and kindCond);
+
 
     if (found) {
-      weight = pupCands[j].puppiWeight();
+      // matches++;
+      weight = pupCand.puppiWeight();
+
+
+      // if (matches > 1) {
+      //   std::cout << "=== zele ===" << std::endl;
+      //   std::cout << "------ pfCand [" << i << "] ---- pupCand [" << j << "] -----" << std::endl;
+      //   std::cout << "pf pT = " << pfCand.pt() << ", pup pT = " << (pupCands)[j].pt() / pupCand.puppiWeight();
+      //   std::cout << "---" << std::endl;
+      // }
+
+
+//       std::cout << "kind:\t"
+//                 << pfCand.id() << "\t" << pupCand.id()
+//                 << std::endl;
+//       std::cout << "chg:\t"
+//                 << pfCand.charge() << "\t" << pupCand.charge()
+//                 << std::endl;
+//       std::cout << "lv:\t"
+// //                << pfCand.id() << " ---- " << pupCand.id()
+//                 << std::endl;
+//       std::cout << "pw:\t"
+//                 << pfCand.puppiWeight() << "\t" << pupCand.puppiWeight()
+//                 << std::endl;
+//       std::cout << "pt:\t"
+//                 << pfCand.pt() << "\t" << pupCand.pt()
+//                 << std::endl;
+//       std::cout << "eta:\t"
+//                 << pfCand.eta() << "\t" << pupCand.eta()
+//                 << std::endl;
+//       std::cout << "phi:\t"
+//                 << pfCand.phi() << "\t" << pupCand.phi()
+//                 << std::endl;
+//       std::cout << "hwpt:\t"
+//                 << pfCand.hwPt() << "\t" << pupCand.hwPt()
+//                 << std::endl;
+//       std::cout << "hweta:\t"
+//                 << pfCand.hwEta() << "\t" << pupCand.hwEta()
+//                 << std::endl;
+//       std::cout << "hwphi:\t"
+//                 << pfCand.hwPhi() << "\t" << pupCand.hwPhi()
+//                 << std::endl;
+//       std::cout << "----" << std::endl;
+
+
       break;
     }
   }
@@ -93,7 +218,7 @@ L1MultPuppiWeightProducer::getWeight(int i, l1t::PFCandidate pfCand, std::vector
   return weight;
 }
 
-l1t::PFCandidate collapseWeights(l1t::PFCandidate pfCand, std::vector<double> weights)
+l1t::PFCandidate L1MultPuppiWeightProducer::collapseWeights(l1t::PFCandidate pfCand, std::vector<double> weights)
 {
   // current implementation picks the max weight and attaches it to candidate
   double weight = 0;
@@ -131,22 +256,79 @@ L1MultPuppiWeightProducer::produce(edm::StreamID id, edm::Event& iEvent, const e
 
   for (size_t i = 0; i < pfParticles->size(); ++i)
   {
+
+    // for (size_t j = 0; j < pfParticles->size(); ++j)
+    // {
+    //   if (i != j)
+    //     if ((*pfParticles)[j].eta() == (*pfParticles)[i].eta()
+    //         and (*pfParticles)[j].phi() == (*pfParticles)[i].phi()
+    //         and (*pfParticles)[j].id() == (*pfParticles)[i].id()) {
+    //       std::cout << "========= candidate " << i << " has same position as " << j
+    //                 << ", pT[" << i << "] = " << (*pfParticles)[i].pt()
+    //                 << ", pT[" << j << "] = " << (*pfParticles)[j].pt()
+    //                 << ", chrg [" << i << "] = " << (*pfParticles)[i].charge()
+    //                 << ", chrg [" << j << "] = " << (*pfParticles)[j].charge()
+    //                 << std::endl;
+    //     }
+    // }
+
     vector<double> weights;
+    vector<l1t::PFCandidate> cand_list;
 
-    weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles));
-    weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles1));
-    weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles2));
-    weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles3));
-    weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles4));
+    int cand_i = -1;
 
-    double weight = 0;
-    for (const auto & w : weights) weight = std::max(weight, w);
+    cand_i = getMatch(i, (*pfParticles)[i], *pupParticles);
+    if (cand_i >= 0) cand_list.emplace_back((*pupParticles)[cand_i]);
+    cand_i = getMatch(i, (*pfParticles)[i], *pupParticles1);
+    if (cand_i >= 0) cand_list.emplace_back((*pupParticles1)[cand_i]);
+    cand_i = getMatch(i, (*pfParticles)[i], *pupParticles2);
+    if (cand_i >= 0) cand_list.emplace_back((*pupParticles2)[cand_i]);
+    cand_i = getMatch(i, (*pfParticles)[i], *pupParticles3);
+    if (cand_i >= 0) cand_list.emplace_back((*pupParticles3)[cand_i]);
+    cand_i = getMatch(i, (*pfParticles)[i], *pupParticles4);
+    if (cand_i >= 0) cand_list.emplace_back((*pupParticles4)[cand_i]);
 
-    l1t::PFCandidate cand((*pfParticles)[i]);
-    cand.setPuppiWeight(weight);
-    cands.emplace_back(cand);
+    // weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles));
+    // weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles1));
+    // weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles2));
+    // weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles3));
+    // weights.emplace_back(getWeight(i, (*pfParticles)[i], *pupParticles4));
+
+    bool return_weight = false;
+
+    if (return_weight) {
+
+      // collapse weights
+      double weight = 0;
+      // for (const auto & w : weights) weight = std::max(weight, w);
+      // for (unsigned int j = 0; j < top_m_; ++j)  weight = std::max(weight, weights[i]);
+
+      weight = weights[0];
+
+
+      if (weight > 0) {
+        l1t::PFCandidate cand((*pfParticles)[i]);
+        cand.setPuppiWeight(weight);
+        cands.emplace_back(cand);
+      }
+    } else {
+
+      double max_weight = 0;
+      double max_j = -1;
+      for (size_t j = 0; j < cand_list.size(); ++j) {
+        if (cand_list[j].puppiWeight() > max_weight) {
+          max_weight = cand_list[j].puppiWeight();
+          max_j = j;
+        }
+      }
+
+      if (max_weight > 0) {
+        cands.emplace_back(cand_list[max_j]);
+      }
+    }
 
     // store pf particle and weights
+
   }
 
   iEvent.put(std::move(std::make_unique<std::vector<l1t::PFCandidate>>(cands)), "MultiPuppi");
